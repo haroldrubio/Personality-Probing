@@ -1,4 +1,4 @@
 .api-key
 .vscode
 
-node-modules/**
+node-modules/

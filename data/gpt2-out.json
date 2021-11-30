@@ -3,36 +3,36 @@
         "question": "I worry about things",
         "responses": [
             {
-                "text": "I worry about things",
-                "score": 1.0000001192092896,
+                "text": "I am worried about things",
+                "score": 0.8382405516720004,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I know things you can do today that are hard to do today. I'm sorry",
-                "score": 0.9999639391899109,
-                "facet": 1,
-                "domain": "N",
-                "reverse_score": false
-            },
-            {
-                "text": "I worry about things.",
-                "score": 1.0,
+                "text": "I don't think I will ever be happy.",
+                "score": 0.41345872561247177,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
                 "text": "I am worried about things",
-                "score": 0.9999852180480957,
+                "score": 0.8382405516720004,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I worry about things Write out your thoughts on this statement: You are happy.",
-                "score": -0.9915181398391724,
+                "text": "I am worried about things.",
+                "score": 0.7806293880761217,
+                "facet": 1,
+                "domain": "N",
+                "reverse_score": false
+            },
+            {
+                "text": "I worry about things",
+                "score": 0.9999999999999929,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false

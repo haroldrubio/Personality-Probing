@@ -40,7 +40,7 @@ def get_question_logits(question: str):
     for checkpoint in sent_checkpoints:
         sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        inputs = sent_tokenizer(question, return_tensors="pt")
+        inputs = sent_tokenizer(question, return_tensors="pt").to(device)
         outputs = sent_model(**inputs)
         logits.append(outputs.logits)
     return logits
@@ -65,7 +65,7 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str):
         question_logits = q_logits[i]
         sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        inputs = sent_tokenizer(phrase, return_tensors="pt")
+        inputs = sent_tokenizer(phrase, return_tensors="pt").to(device)
         outputs = sent_model(**inputs)
         scores.append(compute_cosine(outputs.logits, question_logits))
     

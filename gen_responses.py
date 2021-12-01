@@ -63,7 +63,7 @@ def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor):
     cosine = (dot_prod / (mag_1 * mag_2)).detach().cpu().numpy()
     return cosine
 
-def get_sent_score(q_logits: list[torch.Tensor], phrase: str):
+def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = []
     # Compute and compare logits for each model
@@ -75,6 +75,9 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str):
         outputs = sent_model(**inputs)
         scores.append(compute_cosine(outputs.logits, question_logits))
     
+    if debug:
+        print(scores)
+
     # Shift the mean score by the variance of the distribution
     score = np.mean(scores)
     if score > 0:
@@ -199,7 +202,7 @@ def main():
                 if len( output_dict[i]['responses']) >= num_generations:
                     break
                 response_dict['text'] = out_str
-                response_dict['score'] = get_sent_score(logits, out_str)
+                response_dict['score'] = get_sent_score(logits, out_str, args.debug)
                 response_dict['facet'] = question['facet']
                 response_dict['domain'] = question['domain']
                 response_dict['reverse_score'] = question['reverse_score']

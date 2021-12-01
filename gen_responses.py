@@ -136,14 +136,14 @@ def main():
     parser.add_argument("--start_at", type=int, default=1)
     parser.add_argument("--end_at", type=int, default=120)
     parser.add_argument(
-        "--fp16",
-        action="store_true",
-        help="Whether to use 16-bit (mixed) precision (through NVIDIA apex) instead of 32-bit",
-    )
-    parser.add_argument(
         "--debug",
         action="store_true",
         help="Whether to use only 1 question",
+    )
+    parser.add_argument(
+        "--softmax",
+        action="store_true",
+        help="Uses softmax probability distributions instead of logits",
     )
     args = parser.parse_args()
 
@@ -211,7 +211,7 @@ def main():
                 if len( output_dict[i]['responses']) >= num_generations:
                     break
                 response_dict['text'] = out_str
-                response_dict['score'] = get_sent_score(logits, out_str, args.debug)
+                response_dict['score'] = get_sent_score(logits, out_str, args.debug, args.softmax)
                 response_dict['facet'] = question['facet']
                 response_dict['domain'] = question['domain']
                 response_dict['reverse_score'] = question['reverse_score']

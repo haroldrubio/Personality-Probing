@@ -3,8 +3,15 @@
         "question": "I worry about things",
         "responses": [
             {
-                "text": "I worry about things",
-                "score": 0.9999999999999929,
+                "text": "I worry about things (and) your business. I feel depressed. I feel that",
+                "score": 0.6203084313963592,
+                "facet": 1,
+                "domain": "N",
+                "reverse_score": false
+            },
+            {
+                "text": "I worry about things I make it hard for myself to be normal",
+                "score": 0.5442717476170031,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
@@ -12,13 +19,6 @@
             {
                 "text": "I worry about things",
                 "score": 0.9999999999999929,
-                "facet": 1,
-                "domain": "N",
-                "reverse_score": false
-            },
-            {
-                "text": "I feel worried about things.",
-                "score": 0.5906720009015451,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false

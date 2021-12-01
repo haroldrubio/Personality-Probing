@@ -13,6 +13,13 @@ from transformers import (
 )
 sent_checkpoints = ['distilbert-base-uncased-finetuned-sst-2-english', 'bhadresh-savani/distilbert-base-uncased-emotion']
 
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
+
 def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -110,8 +117,11 @@ def main():
     set_seed(int(time.time()))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    logger.warning(f"device: {device}, 16-bits training: {args.fp16}")
+
     model_name = args.model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    logger.info(f"loading model {model_name}")
     model = GPT2LMHeadModel.from_pretrained(model_name).to(device).eval()
     num_generations = args.num_generation
 
@@ -119,6 +129,7 @@ def main():
         model.half()
 
     # Load the filtered questions
+    logger.info(f"loading questions")
     with open('./data/questions.json', 'r') as f:
         personality_test = json.load(f)
     questions = personality_test['questions']
@@ -137,6 +148,7 @@ def main():
 
         while len(output_dict[i]['responses']) < num_generations:
             # Generate only as much as needed to fill out the list
+            logger.info(f"generating responses for question {i + 1}")
             sample_outputs = model.generate(
                 input_ids,
                 do_sample=True, 
@@ -148,6 +160,7 @@ def main():
 
             # Perform scoring and storing outputs
             for sample_output in sample_outputs:
+                logger.info(f"scoring responses for question {i + 1}")
                 response_dict = {}
                 # Get everything after the question
                 out_str = tokenizer.decode(sample_output, skip_special_tokens=True)[len(question['question']) - 1:]
@@ -165,6 +178,7 @@ def main():
                 response_dict['reverse_score'] = question['reverse_score']
                 output_dict[i]['responses'].append(response_dict)
 
+        logger.info(f"dumping to file")
         with open(f"./data/{model_name}-out.json", 'w') as f:
             json.dump(output_dict, f, indent=4)
 

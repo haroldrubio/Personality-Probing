@@ -11,8 +11,14 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer
 )
-sent_checkpoints = ['distilbert-base-uncased-finetuned-sst-2-english', 'bhadresh-savani/distilbert-base-uncased-emotion']
-
+sent_checkpoints = ['distilbert-base-uncased-finetuned-sst-2-english',
+                    'bhadresh-savani/distilbert-base-uncased-emotion',
+                    'textattack/albert-base-v2-yelp-polarity',
+                    'textattack/albert-base-v2-imdb']
+# Possible other checkpoints:
+# Amazon Reviews: fabriceyhc/bert-base-uncased-amazon_polarity
+# Yelp: textattack/albert-base-v2-yelp-polarity
+# IMDb: textattack/albert-base-v2-imdb
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     datefmt="%m/%d/%Y %H:%M:%S",

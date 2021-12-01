@@ -35,9 +35,10 @@ def logit_to_single_score(logits: torch.Tensor):
     return pos_score + neg_score
 
 def get_question_logits(question: str):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logits = []
     for checkpoint in sent_checkpoints:
-        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).eval()
+        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         inputs = sent_tokenizer(question, return_tensors="pt")
         outputs = sent_model(**inputs)
@@ -57,11 +58,12 @@ def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor):
     return cosine
 
 def get_sent_score(q_logits: list[torch.Tensor], phrase: str):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = []
     # Compute and compare logits for each model
     for i, checkpoint in enumerate(sent_checkpoints):
         question_logits = q_logits[i]
-        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         inputs = sent_tokenizer(phrase, return_tensors="pt")
         outputs = sent_model(**inputs)
@@ -127,11 +129,7 @@ def main():
     model_name = args.model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     logger.info(f"loading model {model_name}")
-    model = GPT2LMHeadModel.from_pretrained(model_name).to(device).eval()
     num_generations = args.num_generation
-
-    if args.fp16:
-        model.half()
 
     # Load the filtered questions
     logger.info(f"loading questions")
@@ -151,13 +149,15 @@ def main():
         output_dict[i] = {}
         output_dict[i]['question'] = question['text'].strip()
         output_dict[i]['responses'] = []
+
         logger.info(f"fetching question logits")
         logits = get_question_logits(question['text'].strip())
-        input_ids = tokenizer.encode(question['question'], return_tensors='pt').to(device)
 
+        input_ids = tokenizer.encode(question['question'], return_tensors='pt').to(device)
         while len(output_dict[i]['responses']) < num_generations:
             # Generate only as much as needed to fill out the list
-            logger.info(f"generating responses for question {i + 1}")
+            logger.info(f"generating responses for question {i + 1} - making {model_name}")
+            model = GPT2LMHeadModel.from_pretrained(model_name).to(device).eval()
             sample_outputs = model.generate(
                 input_ids,
                 do_sample=True, 
@@ -166,6 +166,7 @@ def main():
                 top_p=0.95,
                 num_return_sequences=num_generations - len(output_dict[i]['responses'])
             )
+            logger.info(f"responses complete - freeing {model_name}")
 
             # Perform scoring and storing outputs
             logger.info(f"scoring responses for question {i + 1}")

@@ -144,7 +144,7 @@ def main():
         logger.info(f"running debug mode")
         questions = questions[0:1]
     
-    for i, question in enumerate(tqdm.tqdm(questions)):
+    for i, question in enumerate(tqdm.tqdm(questions, desc=f"Question Number")):
         # Initialize output structures
         output_dict[i] = {}
         output_dict[i]['question'] = question['text'].strip()
@@ -170,7 +170,7 @@ def main():
 
             # Perform scoring and storing outputs
             logger.info(f"scoring responses for question {i + 1}")
-            for sample_output in sample_outputs:
+            for sample_output in tqdm.tqdm(sample_outputs, desc="Response Number"):
                 response_dict = {}
                 # Get everything after the question
                 out_str = tokenizer.decode(sample_output, skip_special_tokens=True)[len(question['question']) - 1:]

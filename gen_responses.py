@@ -77,10 +77,10 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str):
     
     # Shift the mean score by the variance of the distribution
     score = np.mean(scores)
-    if score > 0.5:
-        score = max(0.5, score - np.std(scores)**2)
+    if score > 0:
+        score = max(0, score - np.std(scores)**2)
     else:
-        score = min(0.5, score + np.std(scores)**2)
+        score = min(0, score + np.std(scores)**2)
 
     return score
 

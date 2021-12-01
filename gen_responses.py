@@ -108,8 +108,15 @@ def main():
         required=True,
         help="Model type selected in the list: gpt2/-medium/-large/-xl"
     )
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        required=True,
+        help="The name of the JSON file outputted"
+    )
     parser.add_argument("--num_generation", type=int, default=5)
     parser.add_argument("--start_at", type=int, default=1)
+    parser.add_argument("--end_at", type=int, default=120)
     parser.add_argument(
         "--fp16",
         action="store_true",
@@ -131,6 +138,8 @@ def main():
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     num_generations = args.num_generation
     start_at = args.start_at
+    end_at = args.end_at
+    filename = args.output_file
 
     # Load the filtered questions
     logger.info(f"loading questions")
@@ -144,7 +153,7 @@ def main():
     if args.debug:
         logger.info(f"running debug mode")
         questions = questions[0:1]
-    questions = questions[start_at - 1:]
+    questions = questions[start_at - 1: end_at]
 
     for i, question in enumerate(tqdm.tqdm(questions, desc=f"Question Number")):
         # Initialize output structures
@@ -191,7 +200,7 @@ def main():
                 output_dict[i]['responses'].append(response_dict)
 
         logger.info(f"dumping to file")
-        with open(f"./data/{model_name}-out.json", 'w') as f:
+        with open(f"./data/{filename}.json", 'w') as f:
             json.dump(output_dict, f, indent=4)
 
 if __name__ == "__main__":

@@ -3,29 +3,22 @@
         "question": "I worry about things",
         "responses": [
             {
-                "text": "I am worried about things",
-                "score": 0.8382405516720004,
+                "text": "I worry about things",
+                "score": 0.9999999999999929,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I don't think I will ever be happy.",
-                "score": 0.41345872561247177,
+                "text": "I don't feel sad.",
+                "score": 0.17122825580424106,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I am worried about things",
-                "score": 0.8382405516720004,
-                "facet": 1,
-                "domain": "N",
-                "reverse_score": false
-            },
-            {
-                "text": "I am worried about things.",
-                "score": 0.7806293880761217,
+                "text": "I worry about things I am happy with.",
+                "score": -0.06534615504129704,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
@@ -33,6 +26,13 @@
             {
                 "text": "I worry about things",
                 "score": 0.9999999999999929,
+                "facet": 1,
+                "domain": "N",
+                "reverse_score": false
+            },
+            {
+                "text": "I know things are difficult.",
+                "score": 0.9525105768714042,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false

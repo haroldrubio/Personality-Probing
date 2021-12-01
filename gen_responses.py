@@ -109,6 +109,7 @@ def main():
         help="Model type selected in the list: gpt2/-medium/-large/-xl"
     )
     parser.add_argument("--num_generation", type=int, default=5)
+    parser.add_argument("--start_at", type=int, default=1)
     parser.add_argument(
         "--fp16",
         action="store_true",
@@ -128,8 +129,8 @@ def main():
 
     model_name = args.model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-    logger.info(f"loading model {model_name}")
     num_generations = args.num_generation
+    start_at = args.start_at
 
     # Load the filtered questions
     logger.info(f"loading questions")
@@ -143,7 +144,8 @@ def main():
     if args.debug:
         logger.info(f"running debug mode")
         questions = questions[0:1]
-    
+    questions = questions[start_at - 1:]
+
     for i, question in enumerate(tqdm.tqdm(questions, desc=f"Question Number")):
         # Initialize output structures
         output_dict[i] = {}

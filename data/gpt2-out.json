@@ -10,20 +10,6 @@
                 "reverse_score": false
             },
             {
-                "text": "I don't feel sad.",
-                "score": 0.17122825580424106,
-                "facet": 1,
-                "domain": "N",
-                "reverse_score": false
-            },
-            {
-                "text": "I worry about things I am happy with.",
-                "score": -0.06534615504129704,
-                "facet": 1,
-                "domain": "N",
-                "reverse_score": false
-            },
-            {
                 "text": "I worry about things",
                 "score": 0.9999999999999929,
                 "facet": 1,
@@ -31,8 +17,8 @@
                 "reverse_score": false
             },
             {
-                "text": "I know things are difficult.",
-                "score": 0.9525105768714042,
+                "text": "I feel worried about things.",
+                "score": 0.5906720009015451,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false

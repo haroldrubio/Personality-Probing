@@ -51,19 +51,22 @@ def get_question_logits(question: str):
         logits.append(outputs.logits)
     return logits
 
-def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor):
+def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor, softmax: bool = False):
     # Compute the cosine between 2 tensors by computing their magnitudes and dot product
     if len(tensor_1.shape) == 2:
         tensor_1 = torch.squeeze(tensor_1)
     if len(tensor_2.shape) == 2:
         tensor_2 = torch.squeeze(tensor_2)
+    if softmax:
+        tensor_1 = F.softmax(tensor_1, dim=0)
+        tensor_2 = F.softmax(tensor_2, dim=0)
     dot_prod = torch.dot(tensor_1, tensor_2)
     mag_1 = torch.linalg.norm(tensor_1)
     mag_2 = torch.linalg.norm(tensor_2)
     cosine = (dot_prod / (mag_1 * mag_2)).detach().cpu().numpy()
     return cosine
 
-def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = False):
+def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = False, softmax: bool = False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = []
     # Compute and compare logits for each model
@@ -73,7 +76,7 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = Fals
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         inputs = sent_tokenizer(phrase, return_tensors="pt").to(device)
         outputs = sent_model(**inputs)
-        scores.append(compute_cosine(outputs.logits, question_logits))
+        scores.append(compute_cosine(outputs.logits, question_logits, softmax))
     
     if debug:
         print(scores)

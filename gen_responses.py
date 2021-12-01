@@ -112,6 +112,11 @@ def main():
         action="store_true",
         help="Whether to use 16-bit (mixed) precision (through NVIDIA apex) instead of 32-bit",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Whether to use only 1 question",
+    )
     args = parser.parse_args()
 
     set_seed(int(time.time()))
@@ -137,12 +142,16 @@ def main():
     output_dict = {}
 
     # DEBUG: limit to single item
-    questions = questions[0:1]
+    if args.debug:
+        logger.info(f"running debug mode")
+        questions = questions[0:1]
+    
     for i, question in enumerate(tqdm.tqdm(questions)):
         # Initialize output structures
         output_dict[i] = {}
         output_dict[i]['question'] = question['text'].strip()
         output_dict[i]['responses'] = []
+        logger.info(f"fetching question logits")
         logits = get_question_logits(question['text'].strip())
         input_ids = tokenizer.encode(question['question'], return_tensors='pt').to(device)
 
@@ -159,8 +168,8 @@ def main():
             )
 
             # Perform scoring and storing outputs
+            logger.info(f"scoring responses for question {i + 1}")
             for sample_output in sample_outputs:
-                logger.info(f"scoring responses for question {i + 1}")
                 response_dict = {}
                 # Get everything after the question
                 out_str = tokenizer.decode(sample_output, skip_special_tokens=True)[len(question['question']) - 1:]

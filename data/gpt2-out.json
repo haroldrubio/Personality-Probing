@@ -3,22 +3,22 @@
         "question": "I worry about things",
         "responses": [
             {
-                "text": "I worry about things (and) your business. I feel depressed. I feel that",
-                "score": 0.6203084313963592,
+                "text": "I feel sad.",
+                "score": 0.5961991531453208,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I worry about things I make it hard for myself to be normal",
-                "score": 0.5442717476170031,
+                "text": "I am worried about things. I worry about people. I worry about this one person",
+                "score": 0.9035936621615184,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false
             },
             {
-                "text": "I worry about things",
-                "score": 0.9999999999999929,
+                "text": "I am scared of things",
+                "score": 0.5813606698717768,
                 "facet": 1,
                 "domain": "N",
                 "reverse_score": false

@@ -150,7 +150,7 @@ def main():
     set_seed(int(time.time()))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    logger.warning(f"device: {device}, 16-bits training: {args.fp16}")
+    logger.warning(f"device: {device}")
 
     model_name = args.model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)

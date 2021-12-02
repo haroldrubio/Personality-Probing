@@ -147,16 +147,17 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         return scores
 
     for avg, std in zip(scores, stdevs):
-        if not softmax:
-            if avg > 0:
-                avg = max(0, avg - std**2)
+        if var_shift:
+            if not softmax:
+                if avg > 0:
+                    avg = max(0, avg - std**2)
+                else:
+                    avg = min(0, avg + std**2)
             else:
-                avg = min(0, avg + std**2)
-        else:
-            if avg > 0.5:
-                avg = max(0.5, avg - std**2)
-            else:
-                avg = min(0.5, avg + std**2)
+                if avg > 0.5:
+                    avg = max(0.5, avg - std**2)
+                else:
+                    avg = min(0.5, avg + std**2)
         final_scores.append(avg)
 
     return final_scores

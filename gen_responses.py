@@ -116,9 +116,6 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
 
         outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
-        # Batch size 1 compensation
-        if len(responses) == 1:
-            logits = logits.unsqueeze(0)
         logger.info(f"logits: {logits[0]}")
         logger.info(f"logits shape: {logits.shape}")
 

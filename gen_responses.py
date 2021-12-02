@@ -162,7 +162,7 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
                     avg = max(0.5, avg - std**2)
                 else:
                     avg = min(0.5, avg + std**2)
-        final_scores.append(avg)
+        final_scores.append(float(avg))
 
     return final_scores
 

@@ -100,18 +100,18 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = None
     # Compute tokenized batch
-    for i, checkpoint in enumerate(tqdm.tqdm(sent_checkpoints)):
+    pbar = tqdm.tqdm(sent_checkpoints)
+    for i, checkpoint in enumerate(pbar):
         # Fetch information on current checkpoint logits for the question
+        pbar.set_description(f"Now loading {checkpoint}")
         curr_q = torch.squeeze(q_logits[i]) # M
         curr_q_norm = torch.linalg.norm(curr_q)
 
         # Load and pass through the model
-        logger.info(f"now loading {checkpoint}")
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         inputs = sent_tokenizer(responses, padding=True, return_tensors="pt").to(device)
         outputs = sent_model(**inputs)
-        logger.info(f"forward pass complete")
         logits = outputs.logits # B x M
 
         # Compute dot product

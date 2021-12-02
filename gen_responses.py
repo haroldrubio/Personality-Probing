@@ -100,6 +100,7 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = None
     # Compute tokenized batch
+    # BUG: Batch size 1
     pbar = tqdm.tqdm(sent_checkpoints)
     for i, checkpoint in enumerate(pbar):
         # Fetch information on current checkpoint logits for the question
@@ -114,20 +115,25 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
         logger.info(f"logits: {logits[0]}")
+        logger.info(f"logits shape: {logits.shape}")
 
         # Compute dot product
         if softmax:
             logits = F.softmax(logits, dim=1)
             logger.info(f"softmax logits: {logits[0]}")
+            logger.info(f"softmax shape: {logits.shape}")
         logits_norm = torch.squeeze(torch.linalg.norm(logits, dim=1))
         scale_factor = curr_q_norm * logits_norm
+        logger.info(f"scale factor shape: {scale_factor.shape}")
         dot_prods = torch.squeeze(torch.mv(logits, curr_q))
         logger.info(f"dot products: {dot_prods}")
+        logger.info(f"dot product shape: {dot_prods.shape}")
         if scores is None:
             scores = (dot_prods / scale_factor).unsqueeze(0)
         else:
             scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(0)], dim=0)
         logger.info(f"scores first response: {scores[0]}")
+        logger.info(f"scores shape: {scores.shape}")
     
     # Shift the mean score by the variance of the distribution
     stdevs = torch.std(scores, dim=0).detach().cpu().numpy()

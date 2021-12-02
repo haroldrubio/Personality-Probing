@@ -136,6 +136,10 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         logger.info(f"scores shape: {scores.shape}")
     
     # Shift the mean score by the variance of the distribution
+    logger.info(f"means: {torch.mean(scores, dim=1)}")
+    logger.info(f"means shape: {torch.mean(scores, dim=1).shape}")
+    logger.info(f"stdevs: {torch.std(scores, dim=1)}")
+    logger.info(f"stdev shape: {torch.std(scores, dim=1).shape}")
     stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
     scores = torch.mean(scores, dim=1).detach().cpu().numpy()
     final_scores = []

@@ -96,6 +96,52 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = Fals
 
     return score
 
+def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], debug: bool = False, softmax: bool = False):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    scores = None
+    # Compute tokenized batch
+    for i, checkpoint in enumerate(sent_checkpoints):
+        # Fetch information on current checkpoint logits for the question
+        curr_q = torch.squeeze(q_logits[i]) # M
+        curr_q_norm = torch.linalg.norm(curr_q)
+
+        # Load and pass through the model
+        sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
+        inputs = sent_tokenizer(responses, return_tensors="pt").to(device)
+        outputs = sent_model(**inputs)
+        logits = outputs.logits # B x M
+
+        # Compute dot product
+        if softmax:
+            logits = F.softmax(logits, dim=1)
+        logits_norm = torch.squeeze(torch.linalg.norm(logits, dim=1))
+        scale_factor = curr_q_norm * logits_norm
+        dot_prods = torch.squeeze(torch.mv(logits, curr_q))
+        if scores is None:
+            scores = (dot_prods / scale_factor).unsqueeze(0)
+        else:
+            scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(0)], dim=0)
+    
+    # Shift the mean score by the variance of the distribution
+    stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
+    scores = torch.mean(scores, dim=1).detach().cpu().numpy()
+    final_scores = []
+    for avg, std in zip(scores, stdevs):
+        if not softmax:
+            if avg > 0:
+                avg = max(0, avg - std**2)
+            else:
+                avg = min(0, avg + std**2)
+        else:
+            if avg > 0.5:
+                avg = max(0.5, avg - std**2)
+            else:
+                avg = min(0.5, avg + std**2)
+        final_scores.append(avg)
+
+    return final_scores
+
 def check_ngram_overlap(base: str, target: str, n: int = 2):
     """
     Returns true if there is an n-gram overlap (split by space) between the base and target string
@@ -198,7 +244,10 @@ def main():
             logger.info(f"responses complete - freeing {model_name}")
 
             # Perform scoring and storing outputs
+            # Aggregate responses that pass the ngram overlap
+            # TODO: Aggregate valid responses then send in one shot
             logger.info(f"scoring responses for question {i + 1}")
+            scoring_batch = []
             for sample_output in tqdm.tqdm(sample_outputs, desc="Response Number"):
                 response_dict = {}
                 # Get everything after the question
@@ -210,12 +259,20 @@ def main():
                 # And break out if reached limit
                 if len( output_dict[i]['responses']) >= num_generations:
                     break
+
+                # If legal, add metadata information to list of responses and add it to the batch
                 response_dict['text'] = out_str
-                response_dict['score'] = get_sent_score(logits, out_str, args.debug, args.softmax)
+                scoring_batch.append(out_str)
                 response_dict['facet'] = question['facet']
                 response_dict['domain'] = question['domain']
                 response_dict['reverse_score'] = question['reverse_score']
                 output_dict[i]['responses'].append(response_dict)
+
+            # Compute and set batch scores
+            if len(scoring_batch) >= 1:
+                batch_scores = batch_sent_score(logits, scoring_batch, args.debug, args.softmax)
+                for response, score in zip(output_dict[i]['responses'], batch_scores):
+                    response['score'] = score
 
         logger.info(f"dumping to file")
         with open(f"./data/{filename}.json", 'w') as f:

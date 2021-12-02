@@ -112,8 +112,12 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         sent_tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
         inputs = sent_tokenizer(responses, padding=True, return_tensors="pt").to(device)
+
         outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
+        # Batch size 1 compensation
+        if len(responses) == 1:
+            logits = logits.unsqueeze(0)
         logger.info(f"logits: {logits[0]}")
         logger.info(f"logits shape: {logits.shape}")
 

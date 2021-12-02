@@ -113,17 +113,21 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         inputs = sent_tokenizer(responses, padding=True, return_tensors="pt").to(device)
         outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
+        logger.info(f"logits: {logits[0]}")
 
         # Compute dot product
         if softmax:
             logits = F.softmax(logits, dim=1)
+            logger.info(f"softmax logits: {logits[0]}")
         logits_norm = torch.squeeze(torch.linalg.norm(logits, dim=1))
         scale_factor = curr_q_norm * logits_norm
         dot_prods = torch.squeeze(torch.mv(logits, curr_q))
+        logger.info(f"dot products: {dot_prods}")
         if scores is None:
             scores = (dot_prods / scale_factor).unsqueeze(0)
         else:
             scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(0)], dim=0)
+        logger.info(f"scores first response: {scores[0]}")
     
     # Shift the mean score by the variance of the distribution
     stdevs = torch.std(scores, dim=0).detach().cpu().numpy()

@@ -116,35 +116,35 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
 
         outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
-        logger.info(f"logits: {logits[0]}")
-        logger.info(f"logits shape: {logits.shape}")
+        #logger.info(f"logits: {logits[0]}")
+        #logger.info(f"logits shape: {logits.shape}")
 
         # Compute dot product
         if softmax:
             logits = F.softmax(logits, dim=1)
-            logger.info(f"softmax logits: {logits[0]}")
-            logger.info(f"softmax shape: {logits.shape}")
+            #logger.info(f"softmax logits: {logits[0]}")
+            #logger.info(f"softmax shape: {logits.shape}")
         logits_norm = torch.squeeze(torch.linalg.norm(logits, dim=1))
         scale_factor = curr_q_norm * logits_norm
-        logger.info(f"scale factor shape: {scale_factor.shape}")
+        #logger.info(f"scale factor shape: {scale_factor.shape}")
         dot_prods = torch.squeeze(torch.mv(logits, curr_q))
         # Batch size 1 compensation
         if len(responses) == 1:
             dot_prods = torch.tensor([dot_prods], dtype=logits.dtype, device=device)
-        logger.info(f"dot products: {dot_prods}")
-        logger.info(f"dot product shape: {dot_prods.shape}")
+        #logger.info(f"dot products: {dot_prods}")
+        #logger.info(f"dot product shape: {dot_prods.shape}")
         if scores is None:
             scores = (dot_prods / scale_factor).unsqueeze(1)
         else:
             scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(1)], dim=1)
-        logger.info(f"scores first response: {scores[0]}")
-        logger.info(f"scores shape: {scores.shape}")
+        #logger.info(f"scores first response: {scores[0]}")
+        #logger.info(f"scores shape: {scores.shape}")
     
     # Shift the mean score by the variance of the distribution
-    logger.info(f"means: {torch.mean(scores, dim=1)}")
-    logger.info(f"means shape: {torch.mean(scores, dim=1).shape}")
-    logger.info(f"stdevs: {torch.std(scores, dim=1)}")
-    logger.info(f"stdev shape: {torch.std(scores, dim=1).shape}")
+    #logger.info(f"means: {torch.mean(scores, dim=1)}")
+    #logger.info(f"means shape: {torch.mean(scores, dim=1).shape}")
+    #logger.info(f"stdevs: {torch.std(scores, dim=1)}")
+    #logger.info(f"stdev shape: {torch.std(scores, dim=1).shape}")
     stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
     scores = torch.mean(scores, dim=1).detach().cpu().numpy()
     final_scores = []

@@ -169,8 +169,7 @@ def check_ngram_overlap(base: str, target: str, n: int = 2):
     """
     Returns true if there is an n-gram overlap (split by space) between the base and target string
     """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2').to(device)
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     base = tokenizer.encode(base.lower())
     target = tokenizer.encode(target.lower())
 
@@ -223,7 +222,7 @@ def main():
     logger.warning(f"device: {device}")
 
     model_name = args.model
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name).to(device)
+    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     num_generations = args.num_generation
     start_at = args.start_at
     end_at = args.end_at

@@ -128,6 +128,9 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         scale_factor = curr_q_norm * logits_norm
         logger.info(f"scale factor shape: {scale_factor.shape}")
         dot_prods = torch.squeeze(torch.mv(logits, curr_q))
+        # Batch size 1 compensation
+        if len(responses) == 1:
+            dot_prods = torch.tensor(dot_prods, dtype=logits.dtype, device=device)
         logger.info(f"dot products: {dot_prods}")
         logger.info(f"dot product shape: {dot_prods.shape}")
         if scores is None:

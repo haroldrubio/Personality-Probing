@@ -96,7 +96,7 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str, debug: bool = Fals
 
     return score
 
-def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger: logging.Logger, debug: bool = False, softmax: bool = False, var_shift: bool = False):
+def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger: logging.Logger, debug: bool = False, softmax: bool = False, var_shift: bool = True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = None
     # Compute tokenized batch
@@ -106,6 +106,7 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         # Fetch information on current checkpoint logits for the question
         pbar.set_description(f"Now loading {checkpoint}")
         curr_q = torch.squeeze(q_logits[i]) # M
+        curr_q = F.softmax(curr_q, dim=0)
         curr_q_norm = torch.linalg.norm(curr_q)
 
         # Load and pass through the model
@@ -147,8 +148,6 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
     stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
     scores = torch.mean(scores, dim=1).detach().cpu().numpy()
     final_scores = []
-    if not var_shift:
-        return scores
 
     for avg, std in zip(scores, stdevs):
         if var_shift:

@@ -129,15 +129,15 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
         logger.info(f"dot products: {dot_prods}")
         logger.info(f"dot product shape: {dot_prods.shape}")
         if scores is None:
-            scores = (dot_prods / scale_factor).unsqueeze(0)
+            scores = (dot_prods / scale_factor).unsqueeze(1)
         else:
-            scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(0)], dim=0)
+            scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(1)], dim=1)
         logger.info(f"scores first response: {scores[0]}")
         logger.info(f"scores shape: {scores.shape}")
     
     # Shift the mean score by the variance of the distribution
-    stdevs = torch.std(scores, dim=0).detach().cpu().numpy()
-    scores = torch.mean(scores, dim=0).detach().cpu().numpy()
+    stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
+    scores = torch.mean(scores, dim=1).detach().cpu().numpy()
     final_scores = []
     for avg, std in zip(scores, stdevs):
         if not softmax:

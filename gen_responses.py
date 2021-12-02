@@ -169,7 +169,8 @@ def check_ngram_overlap(base: str, target: str, n: int = 2):
     """
     Returns true if there is an n-gram overlap (split by space) between the base and target string
     """
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2').to(device)
     base = tokenizer.encode(base.lower())
     target = tokenizer.encode(target.lower())
 
@@ -222,7 +223,7 @@ def main():
     logger.warning(f"device: {device}")
 
     model_name = args.model
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    tokenizer = GPT2Tokenizer.from_pretrained(model_name).to(device)
     num_generations = args.num_generation
     start_at = args.start_at
     end_at = args.end_at
@@ -268,7 +269,7 @@ def main():
 
             # Perform scoring and storing outputs
             # Aggregate responses that pass the ngram overlap
-            # TODO: Aggregate valid responses then send in one shot
+            # TODO: Filter this out better
             logger.info(f"scoring responses for question {i + 1}")
             scoring_batch = []
             for sample_output in tqdm.tqdm(sample_outputs, desc="Response Number"):

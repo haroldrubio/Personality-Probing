@@ -272,7 +272,7 @@ def main():
 
             # Compute and set batch scores
             if len(scoring_batch) >= 1:
-                batch_scores = batch_sent_score(logits, scoring_batch, args.debug, args.softmax)
+                batch_scores = batch_sent_score(logits, scoring_batch, logger, debug=args.debug, softmax=args.softmax)
                 for response, score in zip(output_dict[i]['responses'], batch_scores):
                     response['score'] = score
 

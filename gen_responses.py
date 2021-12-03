@@ -205,7 +205,7 @@ def main():
     )
     parser.add_argument("--num_generation", type=int, default=5)
     parser.add_argument("--start_at", type=int, default=1)
-    parser.add_argument("--end_at", type=int, default=120)
+    parser.add_argument("--end_at", type=int, default=-1)
     parser.add_argument(
         "--debug",
         action="store_true",
@@ -242,7 +242,11 @@ def main():
     if args.debug:
         logger.info(f"running debug mode")
         questions = questions[0:1]
-    questions = questions[start_at - 1: end_at]
+
+    if end_at < 0:
+        questions = questions[start_at - 1]
+    else:
+        questions = questions[start_at - 1: end_at]
 
     for i, question in enumerate(tqdm.tqdm(questions, desc=f"Question Number")):
         # Initialize output structures

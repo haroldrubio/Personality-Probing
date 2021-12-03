@@ -189,7 +189,9 @@ def check_ngram_overlap(base: str, target: list[int], n: int = 2):
     return False
 
 def main():
-    pass
+    K = [0, 50, 100, 150, 200, 300]
+    P = [1, 0.99, 0.95, 0.9, 0.8]
+    T = [1, 0.9, 0.8, 0.7]
 
 if __name__ == "__main__":
     main()

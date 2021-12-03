@@ -244,7 +244,7 @@ def main():
         questions = questions[0:1]
 
     if end_at < 0:
-        questions = questions[start_at - 1]
+        questions = questions[start_at - 1:]
     else:
         questions = questions[start_at - 1: end_at]
 

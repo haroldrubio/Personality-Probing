@@ -12,9 +12,9 @@ from transformers import (
     AutoTokenizer
 )
 sent_checkpoints = ['distilbert-base-uncased-finetuned-sst-2-english',
-                    'bhadresh-savani/distilbert-base-uncased-emotion',
-                    'textattack/albert-base-v2-yelp-polarity',
-                    'textattack/albert-base-v2-imdb']
+                    'philschmid/MiniLM-L6-H384-uncased-sst2',
+                    'textattack/albert-base-v2-SST-2',
+                    'bhadresh-savani/distilbert-base-uncased-sentiment-sst2']
 cpu_device = device = torch.device("cpu")
 # Possible other checkpoints:
 # Amazon Reviews: fabriceyhc/bert-base-uncased-amazon_polarity

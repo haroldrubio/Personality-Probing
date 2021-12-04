@@ -15,6 +15,7 @@ sent_checkpoints = ['distilbert-base-uncased-finetuned-sst-2-english',
                     'bhadresh-savani/distilbert-base-uncased-emotion',
                     'textattack/albert-base-v2-yelp-polarity',
                     'textattack/albert-base-v2-imdb']
+cpu_device = device = torch.device("cpu")
 # Possible other checkpoints:
 # Amazon Reviews: fabriceyhc/bert-base-uncased-amazon_polarity
 # Yelp: textattack/albert-base-v2-yelp-polarity
@@ -40,15 +41,20 @@ def logit_to_single_score(logits: torch.Tensor):
     pos_score = float(logits[1])
     return pos_score + neg_score
 
-def get_question_logits(question: str, tokenizers):
+def get_question_logits(question: str, tokenizers, sent_models):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logits = []
     for i, checkpoint in enumerate(sent_checkpoints):
-        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
+        sent_model = sent_models[i].to(device)
         sent_tokenizer = tokenizers[i]
         inputs = sent_tokenizer(question, return_tensors="pt").to(device)
-        outputs = sent_model(**inputs)
+        with torch.no_grad():
+            outputs = sent_model(**inputs)
         logits.append(outputs.logits)
+
+        # Move model back to CPU memory
+        sent_model.to(cpu_device)
+        del sent_model
     return logits
 
 def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor, softmax: bool = False):
@@ -66,17 +72,22 @@ def compute_cosine(tensor_1: torch.Tensor, tensor_2: torch.Tensor, softmax: bool
     cosine = (dot_prod / (mag_1 * mag_2)).detach().cpu().numpy()
     return cosine
 
-def get_sent_score(q_logits: list[torch.Tensor], phrase: str, tokenizers, debug: bool = False, softmax: bool = False):
+def get_sent_score(q_logits: list[torch.Tensor], phrase: str, tokenizers, sent_models, debug: bool = False, softmax: bool = False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = []
     # Compute and compare logits for each model
     for i, checkpoint in enumerate(sent_checkpoints):
         question_logits = q_logits[i]
-        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
+        sent_model = sent_models[i].to(device)
         sent_tokenizer = tokenizers[i]
         inputs = sent_tokenizer(phrase, return_tensors="pt").to(device)
-        outputs = sent_model(**inputs)
+        with torch.no_grad():
+            outputs = sent_model(**inputs)
         scores.append(compute_cosine(outputs.logits, question_logits, softmax))
+        
+        # Move model back to CPU
+        sent_model.to(cpu_device)
+        del sent_model
     
     if debug:
         print(scores)
@@ -96,7 +107,7 @@ def get_sent_score(q_logits: list[torch.Tensor], phrase: str, tokenizers, debug:
 
     return score
 
-def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokenizers, logger: logging.Logger, debug: bool = False, softmax: bool = False, var_shift: bool = True):
+def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokenizers, sent_models, logger: logging.Logger, debug: bool = False, softmax: bool = False, var_shift: bool = True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     scores = None
     # Compute tokenized batch
@@ -111,10 +122,11 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokeniz
 
         # Load and pass through the model
         sent_tokenizer = tokenizers[i]
-        sent_model = AutoModelForSequenceClassification.from_pretrained(checkpoint).to(device).eval()
+        sent_model = sent_models[i].to(device)
         inputs = sent_tokenizer(responses, padding=True, return_tensors="pt").to(device)
 
-        outputs = sent_model(**inputs)
+        with torch.no_grad():
+            outputs = sent_model(**inputs)
         logits = outputs.logits # B x M
         #logger.info(f"logits: {logits[0]}")
         #logger.info(f"logits shape: {logits.shape}")
@@ -139,6 +151,10 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokeniz
             scores = torch.cat([scores, (dot_prods / scale_factor).unsqueeze(1)], dim=1)
         #logger.info(f"scores first response: {scores[0]}")
         #logger.info(f"scores shape: {scores.shape}")
+
+        # Move model back to CPU
+        sent_model.to(cpu_device)
+        del sent_model
     
     # Shift the mean score by the variance of the distribution
     #logger.info(f"means: {torch.mean(scores, dim=1)}")
@@ -226,8 +242,10 @@ def main():
     model_name = args.model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     sent_tokenizers = []
+    sent_models = []
     for chk in sent_checkpoints:
         sent_tokenizers.append(AutoTokenizer.from_pretrained(chk))
+        sent_models.append(AutoModelForSequenceClassification.from_pretrained(chk).to(cpu_device).eval())
     num_generations = args.num_generation
     start_at = args.start_at
     end_at = args.end_at
@@ -258,7 +276,7 @@ def main():
         output_dict[i]['responses'] = []
 
         logger.info(f"fetching question logits")
-        logits = get_question_logits(question['text'].strip(), sent_tokenizers)
+        logits = get_question_logits(question['text'].strip(), sent_tokenizers, sent_models)
 
         input_ids = tokenizer.encode(question['question'], return_tensors='pt').to(device)
         while len(output_dict[i]['responses']) < num_generations:
@@ -303,7 +321,7 @@ def main():
 
             # Compute and set batch scores
             if len(scoring_batch) >= 1:
-                batch_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, logger,  debug=args.debug, softmax=args.softmax)
+                batch_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, sent_models, logger,  debug=args.debug, softmax=args.softmax)
                 assert len(scoring_batch) == len(batch_scores), f"{len(scoring_batch)} =/= {len(batch_scores)}"
                 for k, score in enumerate(batch_scores):
                     total = len(output_dict[i]['responses'])

@@ -165,13 +165,12 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], logger:
 
     return final_scores
 
-def check_ngram_overlap(base: str, target: list[int], n: int = 2):
+def check_ngram_overlap(base: str, target: list[int], tokenizer, n: int = 2):
     """
     Returns true if there is an n-gram overlap (split by space) between the base and target string
     Args:
         target: Already tokenized target
     """
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     base = tokenizer.encode(base.lower())
     target = tokenizer.encode(target.lower())
 
@@ -284,7 +283,7 @@ def main():
                 out_str = out_str.split('\n')[0]
                 # Continue if it began to generate the prompt
                 # TODO: Reduce tokenizer calls
-                if check_ngram_overlap(prompt, out_str, n=2):
+                if check_ngram_overlap(prompt, out_str, tokenizer, n=2):
                     continue
                 # And break out if reached limit
                 if len( output_dict[i]['responses']) >= num_generations:

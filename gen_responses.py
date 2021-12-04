@@ -162,10 +162,10 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokeniz
     #logger.info(f"stdevs: {torch.std(scores, dim=1)}")
     #logger.info(f"stdev shape: {torch.std(scores, dim=1).shape}")
     stdevs = torch.std(scores, dim=1).detach().cpu().numpy()
-    scores = torch.mean(scores, dim=1).detach().cpu().numpy()
+    means = torch.mean(scores, dim=1).detach().cpu().numpy()
     final_scores = []
 
-    for avg, std in zip(scores, stdevs):
+    for avg, std in zip(means, stdevs):
         if var_shift:
             if not softmax:
                 if avg > 0:
@@ -179,7 +179,7 @@ def batch_sent_score(q_logits: list[torch.Tensor], responses: list[str], tokeniz
                     avg = min(0.5, avg + std**2)
         final_scores.append(float(avg))
 
-    return final_scores
+    return final_scores, scores.detach().cpu().numpy()
 
 def check_ngram_overlap(base: str, target: list[int], tokenizer, n: int = 2):
     """
@@ -321,12 +321,13 @@ def main():
 
             # Compute and set batch scores
             if len(scoring_batch) >= 1:
-                batch_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, sent_models, logger,  debug=args.debug, softmax=args.softmax)
+                batch_scores, all_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, logger,  debug=args.debug, softmax=args.softmax)
                 assert len(scoring_batch) == len(batch_scores), f"{len(scoring_batch)} =/= {len(batch_scores)}"
                 for k, score in enumerate(batch_scores):
                     total = len(output_dict[i]['responses'])
                     response = output_dict[i]['responses'][total - len(batch_scores) + k]
                     response['score'] = score
+                    response['ensemble'] = all_scores[k]
 
         logger.info(f"dumping to file")
         with open(f"./data/{filename}.json", 'w') as f:

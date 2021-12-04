@@ -327,7 +327,7 @@ def main():
                     total = len(output_dict[i]['responses'])
                     response = output_dict[i]['responses'][total - len(batch_scores) + k]
                     response['score'] = score
-                    response['ensemble'] = all_scores[k]
+                    response['ensemble'] = all_scores[k].tolist()
 
         logger.info(f"dumping to file")
         with open(f"./data/{filename}.json", 'w') as f:

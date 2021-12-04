@@ -321,7 +321,7 @@ def main():
 
             # Compute and set batch scores
             if len(scoring_batch) >= 1:
-                batch_scores, all_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, logger,  debug=args.debug, softmax=args.softmax)
+                batch_scores, all_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, sent_models, logger, debug=args.debug, softmax=args.softmax)
                 assert len(scoring_batch) == len(batch_scores), f"{len(scoring_batch)} =/= {len(batch_scores)}"
                 for k, score in enumerate(batch_scores):
                     total = len(output_dict[i]['responses'])

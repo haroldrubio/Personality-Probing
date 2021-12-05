@@ -227,6 +227,11 @@ def main():
         help="Whether to use only 1 question",
     )
     parser.add_argument(
+        "--var_shift",
+        action="store_true",
+        help="Shift scores by the variance to further penalize disagreement in the ensemble",
+    )
+    parser.add_argument(
         "--softmax",
         action="store_true",
         help="Uses softmax probability distributions instead of logits",
@@ -321,7 +326,7 @@ def main():
 
             # Compute and set batch scores
             if len(scoring_batch) >= 1:
-                batch_scores, all_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, sent_models, logger, debug=args.debug, softmax=args.softmax)
+                batch_scores, all_scores = batch_sent_score(logits, scoring_batch, sent_tokenizers, sent_models, logger, debug=args.debug, softmax=args.softmax, var_shift=args.var_shift)
                 assert len(scoring_batch) == len(batch_scores), f"{len(scoring_batch)} =/= {len(batch_scores)}"
                 for k, score in enumerate(batch_scores):
                     total = len(output_dict[i]['responses'])
